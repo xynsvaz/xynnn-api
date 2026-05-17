@@ -2,7 +2,7 @@
   "name": "api-fc-vercel",
   "version": "1.0.0",
   "dependencies": {
-    "@sparticuz/chromium": "119.0.2",
-    "puppeteer-core": "21.0.0"
+    "@sparticuz/chromium": "123.0.1",
+    "puppeteer-core": "22.6.0"
   }
 }
