@@ -1,8 +1,13 @@
 {
-  "name": "api-fc-vercel",
+  "name": "xynnn-api-koyeb",
   "version": "1.0.0",
-    "dependencies": {
-    "@sparticuz/chromium": "131.0.1",
-    "puppeteer-core": "23.9.0"
+  "description": "API Render Fake Chat Koyeb",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "puppeteer": "^22.6.0"
   }
 }
