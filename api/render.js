@@ -1,16 +1,17 @@
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
-module.exports = async function(req, res) {
+export default async function handler(req, res) {
+    // Hanya izinkan bot mengirim data via metode POST
     if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    let browser = null;
     try {
         const { html, width, height } = req.body;
 
-        browser = await puppeteer.launch({
+        // Buka browser super ringan khusus serverless Vercel
+        const browser = await puppeteer.launch({
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
             executablePath: await chromium.executablePath(),
@@ -19,22 +20,29 @@ module.exports = async function(req, res) {
         });
 
         const page = await browser.newPage();
-        await page.setViewport({ width: width || 375, height: height || 667, deviceScaleFactor: 2 });
+        
+        // Atur ukuran layar sesuai permintaan bot Xynnn (standarnya 375x667 untuk ukuran HP)
+        await page.setViewport({ 
+            width: width || 375, 
+            height: height || 667 
+        });
 
-        // Batasi waktu loading HTML maksimal 8 detik
-        await page.setContent(html, { waitUntil: 'load', timeout: 8000 });
+        // Masukkan HTML dari bot ke dalam browser Vercel
+        // 'networkidle0' memastikan Vercel menunggu sampai semua font dan foto profil selesai dimuat
+        await page.setContent(html, { waitUntil: 'networkidle0' });
 
-        const element = await page.$('.device-screen');
-        const buffer = await element.screenshot();
+        // Jepret layar (screenshot) menjadi gambar PNG
+        const screenshot = await page.screenshot({ type: 'png' });
+        await browser.close();
 
+        // Kirim hasil gambar kembali ke bot Xynnn
         res.setHeader('Content-Type', 'image/png');
-        res.send(buffer);
+        res.setHeader('Cache-Control', 's-maxage=31536000, stale-while-revalidate');
+        res.send(screenshot);
+
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Error rendering image');
-    } finally {
-        if (browser !== null) {
-            await browser.close();
-        }
+        console.error('Render error:', error);
+        // Jika masih gagal, ini akan memunculkan detail error di log Vercel
+        res.status(500).send(`Error rendering image: ${error.message}`);
     }
-};
+}
